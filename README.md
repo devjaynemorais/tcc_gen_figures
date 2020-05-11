@@ -2,6 +2,6 @@
 
 `python bin/main.py`
 
-### Parametros
+### Parâmetros
 
 `--input ou -i` Para definir o arquivo de leitura
