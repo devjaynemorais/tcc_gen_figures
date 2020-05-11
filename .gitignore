@@ -1,0 +1,7 @@
+./logs/*.csv
+graficos/
+csv/
+
+vamos_analisar.csv
+
+*.pyc
