@@ -24,10 +24,10 @@ def analisePrimaria():
                                                'nome_individuo', 'predominancia', 'altura', 'peso', 'data_criacao', 'nao_sei'])
 
 	data = ProcessoDeDados(dataFrame)
-	data.configurarEstrategia(estrategias.todos)
+	data.configurarEstrategia(estrategias.ponderado)
 
 	data.calcular(['m_direita', 'm_esquerda', 'ponto_articulacao', 'movimento', 'nome_individuo'])
-	data.mostrarResultado(numberOfRows=50000)
+	data.mostrarResultado(numberOfRows=1)
 
 	data.salvarResultado('logs/output.csv')
 
@@ -40,15 +40,15 @@ def analiseSecundaria():
 	porcentagem = RotinasPorcentagem(dataFrame)
 
 
-	# porcentagem.pior()
+	porcentagem.reconhecimentoGeral()
 	porcentagem.movimentoGeral()
 	porcentagem.paGeral()
 	porcentagem.imcGeral()
-	porcentagem.reconhecimentoGeral()
 	porcentagem.tempoAcertos()
 	porcentagem.posicaoGeral()
 	porcentagem.corpoGeral()
 	porcentagem.paDescibes()
+	porcentagem.pior()
 
 
 # Encapsula a inicialização do script
@@ -78,9 +78,9 @@ if __name__ == "__main__":
 		mainFunc = funcMap[args.tipo]
 	# -------------------------------------------------------
 
-	print "\033"
-	print "############## Inicializando os Testes ##############"
-	print "\n"
+	print("\033")
+	print("############## Inicializando os Testes ##############")
+	print("\n")
 
 	mainFunc()
 

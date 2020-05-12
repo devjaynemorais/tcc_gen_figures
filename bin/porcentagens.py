@@ -10,10 +10,10 @@ import matplotlib
 
 matplotlib.rc('font', family='Arial')
 
-
 class RotinasPorcentagem:
     def __init__(self, dataframe):
         self.df = dataframe.iloc[1:]
+        self.backup = self.df
         self.df["resultado"] = pd.to_numeric(self.df["resultado"])
         self.colors = ['#27ae60', '#e74c3c', '#3498db', '#3498db']
         self.explode = (0.05, 0.05)
@@ -28,7 +28,7 @@ class RotinasPorcentagem:
             if not os.path.exists(folderPrefix + folder):
                 os.makedirs(folderPrefix + folder)
 
-        self._cortarItervalor()
+        # self._cortarItervalor()
 
     def _cortarItervalor(self):
         prefixInicial = '00:00:'
@@ -46,7 +46,7 @@ class RotinasPorcentagem:
             temp = prefixFinal + str(i)
 
             self.df = self.df[self.df.tempo != temp]
-            
+
     def movimentoGeral(self):
         listaDeMovimentos = ['Ambas', 'Mao Direita', 'Mao Esquerda']
         movimentos = self.df[['movimento', 'resultado']]
@@ -58,7 +58,7 @@ class RotinasPorcentagem:
 
         for x in listaDeMovimentos:
             movimento = movimentos[(movimentos.movimento == x)]
-            movimento_porcentagem = pd.DataFrame({'Acertos': (
+            movimento_porcentagem = pd.DataFrame({'Reconhecido': (
                 movimento.groupby(('resultado')).size() / len(movimento)) * 100})
 
             grupo = grupo.append(movimento_porcentagem)
@@ -69,7 +69,7 @@ class RotinasPorcentagem:
         grupo = grupo.drop(columns='resultado')
 
         grafico = grupo.plot(
-            kind="bar", colors=self.colors, ylim=(0, 100), rot=0)
+            kind="bar", color=self.colors, ylim=(0, 100), rot=0)
         grafico.set_xticklabels(listaDeMovimentos)
         grafico.set_ylabel('Porcentagem')
 
@@ -82,7 +82,7 @@ class RotinasPorcentagem:
         plt.savefig('graficos/movimento_geral/movimento.png')
 
     def paGeral(self):
-        print self.df
+        print(self.df)
 
         pa_strings = {}
         pa_strings['1-Quadril-EN'] = 'Espaço neutro do Quadril'
@@ -125,7 +125,7 @@ class RotinasPorcentagem:
 
         for x in listaDePas:
             pa = pas[(pas.ponto_articulacao == x)]
-            pa_porcentagem = pd.DataFrame({'PA': pa_strings[x], 'Acertos': (
+            pa_porcentagem = pd.DataFrame({'PA': pa_strings[x], 'Reconhecido': (
                 pa.groupby(('resultado')).size() / len(pa)) * 100})
             novo_pas = novo_pas.append(pa_porcentagem)
 
@@ -133,16 +133,18 @@ class RotinasPorcentagem:
         novo_pas = novo_pas.drop(novo_pas.index[[0]])
 
         grafico = novo_pas.plot(kind="barh", x='PA', alpha=0.75,
-                                color=self.colors[2], rot=0, xlim=(0, 100))
+                                color=self.colors[2], rot=0, xlim=(0, 120))
 
-        grafico.legend(loc='lower right')
+        grafico.legend(loc='center right')
         grafico.set_xlabel("Porcentagem")
         for i in grafico.patches:
            plt.text(i.get_width()+.1, i.get_y()+.05,
-                    str(round((i.get_width()), 2)) + '%', fontsize=10, color='dimgrey')
+                    str(round((i.get_width()), 2)) + '%', fontsize=8, color='dimgrey')
 
+        # plt.figure(figsize=(8,6))
         plt.tight_layout()
-        plt.savefig('graficos/pa_geral/acertos.png', dpi=(150))
+        plt.draw()
+        plt.savefig('graficos/pa_geral/acertos.png')
 
     def imcGeral(self):
         imc_strings = {
@@ -158,9 +160,9 @@ class RotinasPorcentagem:
 
         grupo = pd.DataFrame({})
 
-        for key, value in imc_strings.iteritems():
+        for key, value in imc_strings.items():
             imc = imcs[(imcs.classificacao_imc == key)]
-            imc_porcentagem = pd.DataFrame({'Acertos': (
+            imc_porcentagem = pd.DataFrame({'Reconhecido': (
                 imc.groupby(('resultado')).size() / len(imc)) * 100})
             grupo = grupo.append(imc_porcentagem)
 
@@ -170,7 +172,7 @@ class RotinasPorcentagem:
         grupo = grupo.drop(columns='resultado')
 
         grafico = grupo.plot(
-            kind="barh", colors=self.colors, xlim=(0, 100), rot=0)
+            kind="barh", color=self.colors, xlim=(0, 100), rot=0)
         grafico.set_yticklabels(imc_strings.keys())
         grafico.set_xlabel('Porcentagem')
 
@@ -183,35 +185,42 @@ class RotinasPorcentagem:
         plt.savefig('graficos/imc_geral/imc.png')
 
     def reconhecimentoGeral(self):
-
         reconhecimento = self.df.iloc[1:]
-        reconhecimento['resultado'] = pd.to_numeric(
-            reconhecimento['resultado'])
-        reconhecimento['resultado'].value_counts()
+        reconhecido_todos = reconhecimento.resultado.value_counts()
+        dataframe_calculado = pd.DataFrame({})
+        tam = 0
+        reconhecido_soma = 0
+        nao_reconhecido_soma = 0
 
-        reconhecimento_porcentagem = pd.DataFrame({'Porcentagem': (
-            reconhecimento['resultado'].value_counts() / len(reconhecimento['resultado'])) * 100})
+        for key in reconhecido_todos.index:
+            tam += reconhecido_todos[key]
+            reconhecido_soma += key * reconhecido_todos[key]
+            nao_reconhecido_soma += (1 - key) * reconhecido_todos[key]
 
-        reconhecimento_porcentagem.plot(kind="pie", subplots=True, colors=self.colors, autopct='%1.1f%%', explode=(
-            0.05, 0.05), labels=['Acertos', 'Erros'], startangle=90, radius=2)
+        reconhecido_porcentagem =  (reconhecido_soma / tam) * 100
+        nao_reconhecido_porcentagem = (nao_reconhecido_soma / tam) * 100
+        
+        dataframe_calculado['reconhecido'] = pd.Series(reconhecido_porcentagem)
+        dataframe_calculado['nao_reconhecido'] = pd.Series(nao_reconhecido_porcentagem)
 
-        centre_circle = plt.Circle((0, 0), 0.70, fc='white')
-        fig = plt.gcf()
-        fig.gca().add_artist(centre_circle)
 
-        plt.axis('equal')
+        grafico = dataframe_calculado.plot(kind="bar", color=self.colors, ylim=(1,100))
+        for p in grafico.patches:
+            grafico.annotate(str(round(p.get_height(), 2)) +
+                             '%', (p.get_x() + 0.08, p.get_height() * 1.050))
+
+        plt.legend(['Reconhecido', 'Não Reconhecido'])
         plt.title('Reconhecimento')
-        plt.tight_layout()
         plt.savefig('graficos/reconhecimento_geral/geral.png')
 
     def tempoAcertos(self):
         tempoInMs = [
-            '500ms', '1000ms', '1500ms', '2000ms', '2500ms', '3000ms', '3500ms', '4000ms',
-            '4500ms', '5000ms', '5500ms'
+            '0ms', '500ms', '1000ms', '1500ms', '2000ms', '2500ms', '3000ms', '3500ms', '4000ms',
+            '4500ms', '5000ms', '5500ms', '5990ms'
         ]
-        listaDeTempos = ['00:00:30', '00:01:00', '00:01:30', '00:02:00', '00:02:30',
-                         '00:03:00', '00:03:30', '00:04:00', '00:04:30', '00:05:00', '00:05:30']
-        temposAcertos = self.df[['tempo', 'resultado']]
+        listaDeTempos = ['00:00:00', '00:00:30', '00:01:00', '00:01:30', '00:02:00', '00:02:30',
+                         '00:03:00', '00:03:30', '00:04:00', '00:04:30', '00:05:00', '00:05:30', '00:05:99']
+        temposAcertos = self.backup[['tempo', 'resultado']]
         temposAcertos = temposAcertos.iloc[1:]
         temposAcertos['resultado'] = pd.to_numeric(temposAcertos['resultado'])
         temposAcertos = temposAcertos[(temposAcertos.resultado == 1)]
@@ -222,7 +231,7 @@ class RotinasPorcentagem:
             tempo = temposAcertos[(temposAcertos.tempo == x)]
             grupo = grupo.append(tempo)
 
-        tempo_porcentagem = pd.DataFrame({'Acertos': (
+        tempo_porcentagem = pd.DataFrame({'Reconhecido': (
             grupo.groupby(['tempo']).size() / len(grupo)) * 100})
 
         ax = tempo_porcentagem.plot(kind='line', rot=90)
@@ -268,10 +277,10 @@ class RotinasPorcentagem:
         grupos = pd.DataFrame({})
         analisar = self.df[['resultado', 'ponto_articulacao']]
 
-        for key, value in secoes.iteritems():
+        for key, value in secoes.items():
             analisando = analisar.loc[analisar['ponto_articulacao'].isin(
                 value)]
-            grupos = grupos.append(pd.DataFrame({'Posição': key, 'Acertos': (
+            grupos = grupos.append(pd.DataFrame({'Posição': key, 'Reconhecido': (
                 analisando.groupby(['resultado']).size() / len(analisando)) * 100}))
 
         grupos.fillna(0, inplace=True)
@@ -279,7 +288,7 @@ class RotinasPorcentagem:
         grupos = grupos[(grupos.resultado == 1)]
         grupos = grupos.drop(columns='resultado')
         grafico = grupos.plot(kind='bar',  rot=0,
-                              colors=self.colors, ylim=(0, 100))
+                              color=self.colors, ylim=(0, 100))
 
         for p in grafico.patches:
             grafico.annotate(str(round(p.get_height(), 2)) +
@@ -302,9 +311,9 @@ class RotinasPorcentagem:
         corpoDf = self.df[['resultado', 'ponto_articulacao']]
         grupos = pd.DataFrame({})
 
-        for key, value in corpo.iteritems():
+        for key, value in corpo.items():
             analisando = corpoDf.loc[corpoDf['ponto_articulacao'].isin(value)]
-            grupos = grupos.append(pd.DataFrame({'Parte': key, 'Acertos': (
+            grupos = grupos.append(pd.DataFrame({'Parte': key, 'Reconhecido': (
                 analisando.groupby(['resultado']).size() / len(analisando)) * 100}))
 
         grupos.fillna(0, inplace=True)
@@ -312,7 +321,7 @@ class RotinasPorcentagem:
         grupos = grupos[(grupos.resultado == 1)]
         grupos = grupos.drop(columns='resultado')
         grafico = grupos.plot(kind='bar',  rot=0,
-                              colors=self.colors, ylim=(0, 100))
+                              color=self.colors, ylim=(0, 100))
 
         for p in grafico.patches:
             grafico.annotate(str(round(p.get_height(), 2)) +
@@ -351,5 +360,5 @@ class RotinasPorcentagem:
         pessoas = self.df[['nome_individuo', 'classificacao_imc', 'resultado']]
         pessoasErros = pessoas[pessoas.resultado == 0]
 
-        print pessoasErros.groupby(
-            ['nome_individuo', 'classificacao_imc']).count()
+        print(pessoasErros.groupby(
+            ['nome_individuo', 'classificacao_imc']).count())

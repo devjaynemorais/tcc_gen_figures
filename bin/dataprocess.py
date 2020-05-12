@@ -26,8 +26,8 @@ class ProcessoDeDados:
 	def mostrarResultado(self, numberOfRows):
 		""" Show the result of dataframe processing """
 
-		print self.dataframe.head(numberOfRows)
-		print self.dataframe.resultado.value_counts()
+		print(self.dataframe.head(numberOfRows))
+		print(self.dataframe.resultado.value_counts())
 
 	# Salva o dataframe processado em um arquivo
 	def salvarResultado(self, nomeArquivoDeSaida):
@@ -56,4 +56,4 @@ class ProcessoDeDados:
 
 
 if __name__ == '__main__':
-	print 'Tester'
+	print('Tester')

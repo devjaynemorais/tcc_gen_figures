@@ -3,7 +3,7 @@ import os
 import pandas as pd 
 import numpy as np
 import csv
-# import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt	
 
 
 print "############## Iniciando Testes ##############"
@@ -85,10 +85,10 @@ dataFrame['resultado'] = dataFrame[['m_direita', 'm_esquerda', 'ponto_articulaca
 # print acerto, erro
 
 
-print dataFrame.resultado.value_counts()
+print(dataFrame.resultado.value_counts())
 
 # print dataFrame.resultado.describe()
 # .apply(lambda x: 100 * x / float(x.sum())
 data_agrupado  = dataFrame.pivot_table( index=["movimento","ponto_articulacao"], aggfunc=np.sum)
-print  data_agrupado['resultado']
+print(data_agrupado['resultado'])
 data_agrupado.to_csv('vamos_analisar.csv', encoding='utf-8', index=True, sep=';')
